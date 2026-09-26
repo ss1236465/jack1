@@ -37,7 +37,7 @@ export function createGestureSequence(){
       if(digit===1){step=1;deadline=now+5000;text='1';}
       else if(digit===2){step=step===1?2:0;deadline=now+5000;text='2';}
       else if(digit===5){
-        text=step===2?'中秋快乐':'';
+        text=step===2?'i love you':'';
         if(step===2)loveUntil=now+6000;
         step=0;
       }else{step=0;text='';}

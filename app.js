@@ -3,7 +3,7 @@ import { EffectComposer } from 'three/addons/postprocessing/EffectComposer.js';
 import { RenderPass } from 'three/addons/postprocessing/RenderPass.js';
 import { UnrealBloomPass } from 'three/addons/postprocessing/UnrealBloomPass.js';
 import { OutputPass } from 'three/addons/postprocessing/OutputPass.js';
-import { recognizeDigit, createGestureSequence } from './gestures.js?v=midautumn20260926';
+import { recognizeDigit, createGestureSequence } from './gestures.js?v=v2-particle-text20260926';
 import { createHandTracker } from './hand-tracker.js?v=handfix20260926';
 
 const $ = s => document.querySelector(s);

@@ -8,13 +8,13 @@ assert.equal(hold(s,5,0),'','Standalone five must not trigger love');
 s=createGestureSequence();
 assert.equal(hold(s,1,0),'1');
 assert.equal(hold(s,2,700),'2');
-assert.equal(hold(s,5,1400),'中秋快乐');
-assert.equal(s.update(5,2000),'中秋快乐');
+assert.equal(hold(s,5,1400),'i love you');
+assert.equal(s.update(5,2000),'i love you');
 assert.equal(s.update(5,7800),'','Love expires even when five remains held');
 for(const sequence of [[2,5],[1,5],[1,2,0,5],[2,1,5]]){
  s=createGestureSequence();let result;
  sequence.forEach((d,i)=>{result=hold(s,d,i*700);});
- assert.notEqual(result,'中秋快乐',sequence.join(','));
+ assert.notEqual(result,'i love you',sequence.join(','));
 }
 s=createGestureSequence();hold(s,1,0);hold(s,2,700);
 assert.equal(hold(s,5,7000),'','Expired sequence');
