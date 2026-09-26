@@ -1,0 +1,25 @@
+<!doctype html>
+<html lang="zh-CN"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="theme-color" content="#030811"><title>AETHER · 全息粒子实验室</title><link rel="stylesheet" href="./style.css?v=immersive20260926">
+<script type="importmap">{"imports":{"three":"https://cdn.jsdelivr.net/npm/three@0.180.0/build/three.module.js","three/addons/":"https://cdn.jsdelivr.net/npm/three@0.180.0/examples/jsm/"}}</script></head>
+<body><main id="scene" aria-label="可交互的三维全息粒子"></main>
+<header><a class="brand" href="./"><span class="brandmark">◈</span><span>AETHER<small>全息粒子实验室</small></span></a><div class="topright"><span class="live"><i></i>实时生成</span><button id="fullscreen" class="iconbutton" title="切换全屏" aria-label="切换全屏">⛶</button></div></header>
+<section class="intro"><span class="eyebrow">INTERACTIVE PARTICLE FIELD / 01</span><h1>让光，随你而动。</h1><p>张开双手，释放一片微型宇宙。</p></section>
+<aside class="telemetry"><span><i></i><b id="mode">鼠标交互</b></span><span id="count">30,000 PARTICLES</span><span id="fps">— FPS</span></aside>
+<div class="cross cross-left">+</div><div class="cross cross-right">+</div>
+<section class="camera-panel" id="cameraPanel" hidden><video id="video" autoplay playsinline muted></video><canvas id="landmarks" width="480" height="360"></canvas><span id="handState">等待手势</span></section>
+<div class="bottom">
+<div class="hint" id="hint">移动鼠标旋转 · 按住画布扩散 · 滚轮缩放</div>
+<section class="controls" aria-label="粒子控制面板">
+<div class="shapes" role="group" aria-label="粒子形态"><button class="shape active" data-shape="sphere" aria-pressed="true"><span>◉</span>能量球</button><button class="shape" data-shape="heart" aria-pressed="false"><span>♡</span>爱心</button></div>
+<div class="divider"></div><label class="color-label" title="调整粒子颜色"><input id="color" type="color" value="#42dcff" aria-label="粒子颜色"><span>光色</span></label>
+<label class="spread-control">扩散<input id="spread" type="range" min="0" max="1" step=".01" value=".08" aria-label="粒子扩散"><output id="spreadValue">8%</output></label>
+
+<button id="camera" class="camera-button"><span>◎</span><span id="cameraLabel">开启手势</span></button>
+<button id="helpButton" class="iconbutton" aria-label="显示操作说明" aria-expanded="false">?</button>
+</section>
+<div class="footnote"><span id="status" role="status" aria-live="polite">鼠标模式已就绪</span><span>REALTIME · THREE.JS</span></div>
+</div>
+<aside class="help" id="help" hidden><h2>用双手塑造光</h2><p>☝ 数字 1 <span>粒子「1」</span></p><p>✌ 数字 2 <span>粒子「2」</span></p><p>1 → 2 → 5 <span>中秋快乐</span></p><small>每个手势保持约 0.3 秒，每一步间隔不超过 5 秒；单独张开五指不会触发祝福。祝福显示 6 秒。双手同时比不同数字不会触发。</small><p>✋ 张开 / 握拢 <span>扩散 / 汇聚</span></p><p>↔ 双手拉开 / 靠近 <span>放大 / 缩小</span></p><p>↗ 手掌左右 / 上下移动 <span>旋转 / 俯仰</span></p><p>⟳ 双手倾斜 / 单手转腕 <span>整体倾斜</span></p><hr><p>鼠标移动 <span>旋转视角</span></p><p>按住画布 / 滚轮 <span>扩散 / 缩放</span></p><small>开启手势后只显示粒子。按 Esc 或双击画面恢复控件；再次双击隐藏。摄像头画面仅在本机处理。</small></aside>
+<div id="loading"><span class="loader"></span><b>正在点亮粒子宇宙</b><small id="loadingText">加载 3D 引擎…</small></div>
+<script type="module">import('./app.js?v=handfix20260926').catch(e=>{document.querySelector('#loadingText').textContent='加载失败：请检查网络后刷新。'+e.message;document.querySelector('.loader').style.display='none';console.error(e);});</script>
+</body></html>
