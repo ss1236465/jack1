@@ -3,7 +3,7 @@ import { EffectComposer } from 'three/addons/postprocessing/EffectComposer.js';
 import { RenderPass } from 'three/addons/postprocessing/RenderPass.js';
 import { UnrealBloomPass } from 'three/addons/postprocessing/UnrealBloomPass.js';
 import { OutputPass } from 'three/addons/postprocessing/OutputPass.js';
-import { recognizeDigit, createGestureSequence } from './gestures.js?v=midautumn20260926';
+import { recognizeDigit, createGestureSequence, createCelebrationTimeline } from './gestures.js?v=v3-fireworks20260927';
 import { createHandTracker } from './hand-tracker.js?v=handfix20260926';
 
 const $ = s => document.querySelector(s);
@@ -56,6 +56,7 @@ for(let i=0;i<N;i++){
 }
 const uniforms = {
   uText:{value:0},uImmersive:{value:0},
+  uFireworks:{value:1},uFireworkTime:{value:0},uGreetingBlast:{value:0},
   uTime:{value:0},uMorph:{value:0},uSpread:{value:.08},
   uColor:{value:new THREE.Color('#42dcff')},uPixel:{value:renderer.getPixelRatio()},
   uFlow:{value:new THREE.Vector2()},uSize:{value:mobile?1.9:2.05}
@@ -67,7 +68,21 @@ geometry.setAttribute('aDust',new THREE.BufferAttribute(dust,3));
 geometry.setAttribute('aCloud',new THREE.BufferAttribute(cloud,3));
 geometry.setAttribute('aMeta',new THREE.BufferAttribute(meta,4));
 geometry.setAttribute('aText',new THREE.BufferAttribute(sphere.slice(),3));
-const gestureSequence=createGestureSequence(),textShapes=new Map();
+// Each ray has six following sparks. Shared directions make real fading
+// trails, without allocating or updating particles during an explosion.
+const firework=new Float32Array(N*4),spark=new Float32Array(N*4);
+for(let start=0;start<N;start+=6){
+ const z=rand()*2-1,angle=rand()*Math.PI*2,ring=Math.sqrt(1-z*z);
+ const burst=Math.floor(start/6)%9,speed=.7+rand()*.65,ray=rand(),tone=rand();
+ for(let tail=0;tail<6&&start+tail<N;tail++){
+  firework.set([Math.cos(angle)*ring,z,Math.sin(angle)*ring,burst],(start+tail)*4);
+  spark.set([speed,tail/5,tone,ray],(start+tail)*4);
+ }
+}
+geometry.setAttribute('aFirework',new THREE.BufferAttribute(firework,4));
+geometry.setAttribute('aSpark',new THREE.BufferAttribute(spark,4));
+const gestureSequence=createGestureSequence(),celebrationTimeline=createCelebrationTimeline(),textShapes=new Map();
+let lastCelebrationPhase='idle',targetFireworks=1,fireworkStarted=0;
 let currentText='',targetText=0;
 function textPositions(label){
  if(textShapes.has(label))return textShapes.get(label);
@@ -88,7 +103,7 @@ function textPositions(label){
  }
  textShapes.set(label,positions);return positions;
 }
-function showGestureText(label){
+function applyGestureText(label){
  if(label===currentText)return;
  currentText=label;targetText=label?1:0;
  if(label){
@@ -96,15 +111,29 @@ function showGestureText(label){
   nextTextPositions=textPositions(label);
  }
 }
+function showGestureText(label){
+ if(label==='中秋快乐')celebrationTimeline.start(performance.now());
+ const {phase}=celebrationTimeline.sample(performance.now());
+ applyGestureText(phase==='greeting'?'中秋快乐':phase==='fireworks'?'':label);
+}
+function resetCelebration(){
+ celebrationTimeline.reset();lastCelebrationPhase='idle';
+ gestureSequence.reset();applyGestureText('');
+ $('#mode').textContent=cameraOn?'手势追踪中':'鼠标交互';
+}
 let nextTextPositions=geometry.attributes.aText.array;
 const material = new THREE.ShaderMaterial({
   uniforms,transparent:true,depthWrite:false,blending:THREE.AdditiveBlending,
   vertexShader:`
     uniform float uTime,uMorph,uSpread,uPixel,uSize,uText,uImmersive;
+    uniform float uFireworks,uFireworkTime,uGreetingBlast;
     uniform vec2 uFlow;
+    uniform vec3 uColor;
     attribute vec3 aHeart,aDust,aCloud,aText;
     attribute vec4 aMeta;
+    attribute vec4 aFirework,aSpark;
     varying float vAlpha,vTone,vBlur;
+    varying vec3 vColor;
     mat2 rot(float a){return mat2(cos(a),-sin(a),sin(a),cos(a));}
     void main(){
       vec3 p=mix(position,aHeart,uMorph);
@@ -134,22 +163,95 @@ const material = new THREE.ShaderMaterial({
       vAlpha=(.36+aMeta.z*.48)*sparkle*(1.-vBlur*.45);
       vTone=aMeta.y;
       gl_PointSize=clamp(uSize*uPixel*(9./-mv.z)*( .65+aMeta.w*.85+vBlur*1.6),1.,12.);
+      vColor=uColor;
+      if(uFireworks>.001){
+        float tail=aSpark.y;
+        float fit=min(1.,projectionMatrix[1][1]/projectionMatrix[0][0]);
+        vec3 ray=mat3(modelViewMatrix)*aFirework.xyz;
+        vec4 fire;
+        float age,brightness;
+        bool opening=uGreetingBlast>.5&&uFireworkTime<3.2;
+        if(opening){
+          age=max(0.,uFireworkTime-tail*.20);
+          float travel=(1.-exp(-age*.90))*6.6*fit*aSpark.x;
+          fire=modelViewMatrix*vec4(aText,1.);
+          fire.xyz+=ray*travel;
+          fire.y-=.48*age*age;
+          brightness=exp(-age*.45)*(1.-smoothstep(2.4,3.2,uFireworkTime));
+        }else{
+          float time=max(0.,uFireworkTime-(uGreetingBlast>.5?3.2:0.));
+          float id=aFirework.w;
+          float cycle=floor((time-id*.45)/6.5);
+          age=mod(time-id*.45,6.5)-.75;
+          float depth=10.6+sin(id*1.6)*1.5;
+          vec2 center=vec2(sin(id*2.4+cycle*.73)*.64,.08+cos(id*1.7+cycle*.53)*.43);
+          vec2 extent=depth/vec2(projectionMatrix[0][0],projectionMatrix[1][1]);
+          fire=vec4(center*extent,-depth,1.);
+          if(age<0.){
+            float rise=clamp((age+.75)/.75-tail*.08,0.,1.);
+            fire.y=mix(-extent.y*1.18,fire.y,rise);
+            fire.x+=sin(rise*5.+id)*.035;
+            brightness=step(aSpark.w,.012)*(1.-tail*.75)*.23;
+          }else{
+            float headAge=max(0.,age-tail*.24);
+            float travel=(1.-exp(-headAge*.98))*2.75*fit*aSpark.x*(.82+uSpread*.45);
+            fire.xyz+=ray*travel;
+            fire.y-=.38*headAge*headAge;
+            fire.xy+=uFlow*.22;
+            brightness=exp(-age*.42)*(1.-smoothstep(2.5,3.8,age));
+          }
+        }
+        float flicker=.78+.22*sin(uTime*20.+aSpark.z*60.);
+        brightness*=pow(1.-tail*.8,1.4)*flicker;
+        float hue=fract(aFirework.w*.137+aSpark.z*.08);
+        vec3 palette=.52+.48*cos(6.283*(hue+vec3(0.,.33,.67)));
+        vec3 fireColor=mix(uColor,palette,.83);
+        fireColor=mix(fireColor,vec3(1.,.88,.65),exp(-max(age,0.)*12.)*.45);
+        float fireMix=uFireworks*(1.-uText);
+        fire.z=min(fire.z,-2.5);
+        mv=mix(mv,fire,fireMix);
+        vAlpha=mix(vAlpha,brightness*1.4,fireMix);
+        vBlur=mix(vBlur,0.,fireMix);
+        vColor=mix(vColor,fireColor*2.8,fireMix);
+        float size=clamp((3.5-tail*1.8)*uPixel*10.6/-fire.z,1.,16.);
+        gl_PointSize=mix(gl_PointSize,size,fireMix);
+      }
       gl_Position=projectionMatrix*mv;
     }`,
   fragmentShader:`
     uniform vec3 uColor;
     varying float vAlpha,vTone,vBlur;
+    varying vec3 vColor;
     void main(){
       float d=length(gl_PointCoord-.5)*2.;
       if(d>1.)discard;
       float core=exp(-d*d*7.);
       float halo=exp(-d*d*2.)*.18;
-      vec3 c=mix(uColor,uColor*.65+vec3(.35),pow(vTone,7.)*.65);
+      vec3 c=mix(vColor,vColor*.65+vec3(.35),pow(vTone,7.)*.65);
       gl_FragColor=vec4(c*(1.1+pow(vTone,9.)*.9),(core+halo)*vAlpha);
     }`
 });
 const particles = new THREE.Points(geometry,material);
 particles.frustumCulled=false;field.add(particles);
+
+// Draw the same ballistic rays as line segments as well as sparks. Each
+// segment joins neighboring ages of a ray for a continuous fading trail.
+const fireTrailGeometry=new THREE.BufferGeometry();
+for(const [name,attribute] of Object.entries(geometry.attributes))fireTrailGeometry.setAttribute(name,attribute);
+const trailAnchors=new THREE.BufferAttribute(sphere.slice(),3);
+fireTrailGeometry.setAttribute('aText',trailAnchors);
+const rayIndices=[];
+for(let start=0;start<N;start+=6)for(let tail=0;tail<5&&start+tail+1<N;tail++)rayIndices.push(start+tail,start+tail+1);
+fireTrailGeometry.setIndex(rayIndices);
+const fireTrailMaterial=new THREE.ShaderMaterial({
+ uniforms,transparent:true,depthWrite:false,blending:THREE.AdditiveBlending,
+ vertexShader:material.vertexShader,
+ fragmentShader:`uniform float uFireworks,uText;varying float vAlpha;varying vec3 vColor;
+ void main(){float alpha=vAlpha*.38*smoothstep(.7,1.,uFireworks)*(1.-smoothstep(0.,.04,uText));
+ if(alpha<.003)discard;gl_FragColor=vec4(vColor,alpha);}`
+});
+const fireTrails=new THREE.LineSegments(fireTrailGeometry,fireTrailMaterial);
+fireTrails.frustumCulled=false;field.add(fireTrails);
 
 // Sparse orbital dust gives depth without concealing the central silhouette.
 const orbitGeo = new THREE.BufferGeometry(), orbitCount=mobile?2400:5000;
@@ -164,7 +266,7 @@ orbitGeo.setAttribute('aMeta',new THREE.BufferAttribute(orbitMeta,4));
 const orbitMat=new THREE.ShaderMaterial({
   uniforms,transparent:true,depthWrite:false,blending:THREE.AdditiveBlending,
   vertexShader:`
-    uniform float uTime,uPixel;attribute vec4 aMeta;varying float vA;
+    uniform float uTime,uPixel,uFireworks;attribute vec4 aMeta;varying float vA;
     void main(){
       float a=uTime*(.035+aMeta.x*.06);
       vec3 p=position;
@@ -173,7 +275,7 @@ const orbitMat=new THREE.ShaderMaterial({
       p.yz=mat2(.86,-.51,.51,.86)*p.yz;
       vec4 mv=modelViewMatrix*vec4(p,1.);
       gl_PointSize=clamp((.8+aMeta.z*1.5)*uPixel*9./-mv.z,1.,5.);
-      gl_Position=projectionMatrix*mv;vA=.11+aMeta.w*.34;
+      gl_Position=projectionMatrix*mv;vA=(.11+aMeta.w*.34)*(1.-uFireworks);
     }`,
   fragmentShader:`uniform vec3 uColor;varying float vA;void main(){float d=length(gl_PointCoord-.5)*2.;if(d>1.)discard;gl_FragColor=vec4(uColor,exp(-d*d*5.)*vA);}`
 });
@@ -193,11 +295,11 @@ trailGeo.setAttribute('position',new THREE.Float32BufferAttribute(trailPos,3));
 trailGeo.setAttribute('aTrail',new THREE.Float32BufferAttribute(trailData,3));
 const trailMat=new THREE.ShaderMaterial({
  uniforms,transparent:true,depthWrite:false,blending:THREE.AdditiveBlending,
- vertexShader:`attribute vec3 aTrail;uniform float uTime,uSpread;varying float vA;
+ vertexShader:`attribute vec3 aTrail;uniform float uTime,uSpread,uFireworks;varying float vA;
  void main(){float a=aTrail.x*6.283+uTime*(.08+fract(aTrail.x*9.)*.1)-aTrail.y*.30;
  float r=aTrail.z;vec3 p=vec3(cos(a)*r,sin(a*3.+uTime*.2)*.06,sin(a)*r);
  p.yz=mat2(.86,-.51,.51,.86)*p.yz;
- gl_Position=projectionMatrix*modelViewMatrix*vec4(p,1.);vA=pow(1.-aTrail.y,2.)*.24;}`,
+ gl_Position=projectionMatrix*modelViewMatrix*vec4(p,1.);vA=pow(1.-aTrail.y,2.)*.24*(1.-uFireworks);}`,
  fragmentShader:`uniform vec3 uColor;varying float vA;void main(){gl_FragColor=vec4(uColor,vA);}`
 });
 field.add(new THREE.LineSegments(trailGeo,trailMat));
@@ -215,7 +317,8 @@ let pointerDown=false,cameraOn=false,starting=false,stream=null,hands=null,handT
 let frames=0,lastFPS=performance.now(),last=performance.now(),elapsed=0;
 $('#count').textContent=(N+orbitCount+750).toLocaleString()+' PARTICLES';
 document.querySelectorAll('.shape').forEach(btn=>btn.addEventListener('click',()=>{
- gestureSequence.reset();showGestureText('');
+ resetCelebration();
+ targetFireworks=btn.dataset.shape==='fireworks'?1:0;fireworkStarted=elapsed;
  targetMorph=btn.dataset.shape==='heart'?1:0;
  document.querySelectorAll('.shape').forEach(b=>{b.classList.toggle('active',b===btn);b.setAttribute('aria-pressed',String(b===btn));});
 }));
@@ -232,6 +335,9 @@ canvas.addEventListener('pointercancel',()=>pointerDown=false);
 canvas.addEventListener('lostpointercapture',()=>pointerDown=false);
 canvas.addEventListener('wheel',e=>{e.preventDefault();if(!cameraOn||performance.now()-lastHand>800)targetScale=clamp(targetScale-e.deltaY*.001,.55,1.65);},{passive:false});
 $('#helpButton').addEventListener('click',()=>{const help=$('#help');help.hidden=!help.hidden;$('#helpButton').setAttribute('aria-expanded',String(!help.hidden));});
+$('#celebrate').addEventListener('click',()=>{
+ resetCelebration();showGestureText('中秋快乐');setImmersive(true);
+});
 $('#fullscreen').addEventListener('click',async()=>{
  try{if(document.fullscreenElement)await document.exitFullscreen();else await document.documentElement.requestFullscreen();}
  catch{$('#status').textContent='当前浏览器不支持全屏，可放大窗口体验';}
@@ -326,7 +432,7 @@ canvas.addEventListener('pointerup',event=>{
  else lastTouchTap=now;
 });
 function stopCamera(){
- gestureSequence.reset();showGestureText('');
+ resetCelebration();
  setImmersive(false);
  cameraOn=false;firstHandResult=false;clearTimeout(handTimer);
  if(stream)stream.getTracks().forEach(t=>t.stop());stream=null;
@@ -388,6 +494,30 @@ function animate(now){
  requestAnimationFrame(animate);
  const dt=Math.min((now-last)/1000,.05);last=now;if(document.hidden)return;
  elapsed+=dt;uniforms.uTime.value=elapsed;
+ const celebration=celebrationTimeline.sample(now);
+ const sceneElement=$('#scene'),celebrationAge=String(Math.floor(celebration.age));
+ if(sceneElement.dataset.celebration!==celebration.phase)sceneElement.dataset.celebration=celebration.phase;
+ if(sceneElement.dataset.celebrationAge!==celebrationAge)sceneElement.dataset.celebrationAge=celebrationAge;
+ if(celebration.phase==='greeting')applyGestureText('中秋快乐');
+ if(celebration.phase==='fireworks'){
+  applyGestureText('');
+  if(lastCelebrationPhase!=='fireworks'){
+   $('#mode').textContent='祝福烟花';
+   const text=geometry.attributes.aText.array;
+   for(let start=0;start<N;start+=6)for(let tail=0;tail<6&&start+tail<N;tail++){
+    for(let axis=0;axis<3;axis++)trailAnchors.array[(start+tail)*3+axis]=text[start*3+axis];
+   }
+   trailAnchors.needsUpdate=true;
+  }
+ }
+ if(lastCelebrationPhase==='fireworks'&&celebration.phase==='idle'){
+  gestureSequence.reset();applyGestureText('');fireworkStarted=elapsed;
+  $('#mode').textContent=cameraOn?'手势追踪中':'鼠标交互';
+ }
+ lastCelebrationPhase=celebration.phase;
+ uniforms.uGreetingBlast.value=celebration.phase==='fireworks'?1:0;
+ uniforms.uFireworkTime.value=celebration.phase==='fireworks'?celebration.age:elapsed-fireworkStarted;
+ uniforms.uFireworks.value=damp(uniforms.uFireworks.value,celebration.phase==='fireworks'?1:targetFireworks,7,dt);
  if(cameraOn&&now-lastHand>800)showGestureText(gestureSequence.update(null,now));
  uniforms.uText.value=damp(uniforms.uText.value,targetText,5,dt);
  uniforms.uImmersive.value=damp(uniforms.uImmersive.value,immersive?1:0,4,dt);

@@ -1,7 +1,7 @@
 import { readFileSync } from 'node:fs';
 import assert from 'node:assert/strict';
 const source=readFileSync(new URL('./gestures.js',import.meta.url),'utf8');
-const {createGestureSequence}=await import('data:text/javascript;base64,'+Buffer.from(source).toString('base64'));
+const {createGestureSequence,createCelebrationTimeline}=await import('data:text/javascript;base64,'+Buffer.from(source).toString('base64'));
 const hold=(s,d,t)=>{s.update(d,t);return s.update(d,t+310);};
 let s=createGestureSequence();
 assert.equal(hold(s,5,0),'','Standalone five must not trigger love');
@@ -25,3 +25,19 @@ assert.equal(hold(s,5,200),'','Flicker does not advance sequence');
 s=createGestureSequence();hold(s,1,0);s.reset();hold(s,2,700);
 assert.equal(hold(s,5,1400),'','Camera reset clears history');
 console.log('Gesture sequence tests passed');
+
+const celebration=createCelebrationTimeline();
+assert.equal(celebration.sample(0).phase,'idle');
+assert.equal(celebration.start(1000),true);
+assert.equal(celebration.start(2000),false,'Repeated results must not restart the greeting');
+assert.equal(celebration.sample(6999).phase,'greeting');
+assert.deepEqual(celebration.sample(7000),{phase:'fireworks',age:0});
+assert.deepEqual(celebration.sample(10500),{phase:'fireworks',age:3.5});
+s=createGestureSequence();hold(s,1,0);hold(s,2,700);hold(s,5,1400);
+assert.equal(s.update(null,8000),'','Tracking can end while the celebration continues');
+assert.equal(celebration.sample(15000).phase,'fireworks');
+assert.equal(celebration.sample(19000).phase,'idle');
+assert.equal(celebration.start(20000),true,'A completed celebration can run again');
+celebration.reset();
+assert.equal(celebration.sample(23000).phase,'idle','Closing tracking cancels the celebration');
+console.log('Greeting-to-fireworks timeline tests passed');

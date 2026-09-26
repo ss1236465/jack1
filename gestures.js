@@ -45,3 +45,20 @@ export function createGestureSequence(){
     }
   };
 }
+
+// The celebration runs independently of tracking, so moving a hand out of
+// frame cannot cut off the greeting-to-fireworks transition.
+export function createCelebrationTimeline(){
+  let started=null;
+  return {
+    start(now){if(started!==null)return false;started=now;return true;},
+    reset(){started=null;},
+    sample(now){
+      if(started===null)return {phase:'idle',age:0};
+      const age=Math.max(0,now-started);
+      if(age<6000)return {phase:'greeting',age:age/1000};
+      if(age<18000)return {phase:'fireworks',age:(age-6000)/1000};
+      started=null;return {phase:'idle',age:0};
+    }
+  };
+}
