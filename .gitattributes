@@ -1,3 +1,5 @@
 * text=auto
 # Preserve the exact bytes required by the MediaPipe SHA-256 manifest.
 vendor/hands/** -text
+rose/** text eol=lf
+rose/media/*.mp3 -text
