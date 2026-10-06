@@ -7,8 +7,8 @@
   <meta name="description" content="翻开旧书，打开铁盒。跟随《半岛铁盒》，看一朵代码玫瑰走过温暖、雨幕与回忆。">
   <link rel="icon" href="data:,">
   <title>代码玫瑰 · 第三版 · 半岛铁盒</title>
-  <link rel="stylesheet" href="style.css?v=story-20261006">
-  <link rel="stylesheet" href="edition.css?v=story-20261006">
+  <link rel="stylesheet" href="style.css?v=story-20261006-r2">
+  <link rel="stylesheet" href="edition.css?v=story-20261006-r2">
 </head>
 <body data-chapter="book">
   <canvas id="stage" aria-label="歌曲中的回忆：可拖动旋转，点击玫瑰化成爱心，长按打开日记"></canvas>
@@ -89,6 +89,12 @@
     <div class="diary-navigation"><button id="diaryPrevBtn" aria-label="翻到上一页">← 上一页</button><span id="diaryPageLabel" role="status" aria-live="polite">01 / 03</span><button id="diaryNextBtn" aria-label="翻到下一页">下一页 →</button></div>
     <div class="letter-footer"><small>你写下的内容只保存在这个浏览器里。</small><button id="saveLetterBtn" hidden>收好这一页 <span aria-hidden="true">♡</span></button></div>
   </dialog>
+  <dialog id="photoDialog" class="photo-dialog" aria-labelledby="photoTitle">
+    <div class="letter-top"><span>A MOMENT TO KEEP</span><button id="closePhotoBtn" aria-label="关闭图片预览">×</button></div>
+    <h2 id="photoTitle">留住这一刻。</h2>
+    <img id="photoPreview" alt="当前玫瑰回忆画面的保存图片">
+    <div class="photo-footer"><small>手机也可长按图片保存。</small><a id="downloadPhotoLink" download>下载图片 <span aria-hidden="true">↓</span></a></div>
+  </dialog>
   <div class="toast" id="toast" role="status" aria-live="polite"></div>
   <script src="../vendor/three.min.js"></script>
   <script src="../vendor/CopyShader.js"></script>
@@ -98,9 +104,9 @@
   <script src="../vendor/ShaderPass.js"></script>
   <script src="../vendor/UnrealBloomPass.js"></script>
   <script src="../vendor/EffectComposer.js"></script>
-  <script src="story-timeline.js?v=story-20261006"></script>
-  <script src="story-scene.js?v=story-20261006"></script>
-  <script src="diary.js?v=story-20261006"></script>
-  <script src="app.js?v=story-20261006"></script>
+  <script src="story-timeline.js?v=story-20261006-r2"></script>
+  <script src="story-scene.js?v=story-20261006-r2"></script>
+  <script src="diary.js?v=story-20261006-r2"></script>
+  <script src="app.js?v=story-20261006-r2"></script>
 </body>
 </html>

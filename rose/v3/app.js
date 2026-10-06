@@ -966,6 +966,8 @@
     var chapterButtons = document.querySelectorAll('#chapterNav button');
     var chapterTitle = document.getElementById('chapterTitle'), chapterCaption = document.getElementById('chapterCaption');
     var chapterCounter = document.getElementById('chapterCounter');
+    var photoDialog = document.getElementById('photoDialog'), photoPreview = document.getElementById('photoPreview');
+    var downloadPhotoLink = document.getElementById('downloadPhotoLink'), photoUrl = null;
     var musicEnergy = 0, musicBass = 0, lastMusicSpark = 0;
     var analysisContext = null, musicSource = null, musicAnalyser = null, spectrum = null;
     var introEl = document.getElementById('intro');
@@ -1245,11 +1247,16 @@
       g.fillText('半岛铁盒 · ' + storyFrame.title, photo.width / 2, photo.height - 34 * px);
       photo.toBlob(function (blob) {
         if (!blob) { notify('这次保存未成功，请再试一次。'); return; }
-        var url = URL.createObjectURL(blob), link = document.createElement('a');
-        link.href = url; link.download = 'code-rose-third-edition-' + Date.now() + '.png';
-        document.body.appendChild(link); link.click(); link.remove();
-        setTimeout(function () { URL.revokeObjectURL(url); }, 5000);
-        notify('这一刻，已保存成图片。');
+        if (photoUrl) URL.revokeObjectURL(photoUrl);
+        photoUrl = URL.createObjectURL(blob);
+        if (!photoDialog) {
+          var fallback = document.createElement('a'); fallback.href=photoUrl;
+          fallback.download='code-rose-third-edition-'+Date.now()+'.png'; fallback.click();
+          return;
+        }
+        photoPreview.src = photoUrl; downloadPhotoLink.href = photoUrl;
+        downloadPhotoLink.download = 'code-rose-third-edition-' + Date.now() + '.png';
+        photoDialog.showModal();
       }, 'image/png');
     }
 
@@ -1268,6 +1275,12 @@
       if (e.clientX < rect.left || e.clientX > rect.right || e.clientY < rect.top || e.clientY > rect.bottom) closeLetter();
     });
     document.getElementById('saveBtn').addEventListener('click', saveMoment);
+    var closePhotoBtn=document.getElementById('closePhotoBtn');
+    if (closePhotoBtn) closePhotoBtn.addEventListener('click', function () { photoDialog.close(); });
+    if (photoDialog) photoDialog.addEventListener('close', function () {
+      if (photoUrl) { URL.revokeObjectURL(photoUrl); photoUrl = null; }
+      photoPreview.removeAttribute('src'); downloadPhotoLink.removeAttribute('href');
+    });
     seekEl.addEventListener('input', function () {
       if (Number.isFinite(A.music.duration)) A.music.currentTime = A.music.duration * Number(seekEl.value) / 100;
     });
@@ -1282,6 +1295,8 @@
         if (!chapter) return;
         var length = Number.isFinite(A.music.duration) ? A.music.duration : window.RoseStory.duration;
         A.music.currentTime = chapter.at / window.RoseStory.duration * length;
+        seekEl.value = chapter.at / window.RoseStory.duration * 100;
+        document.getElementById('currentTime').textContent = musicTime(A.music.currentTime);
         manualMorphTime = -1; morphClock = -1; morphValue = 0;
         updateEdition(0); applyStoryGrowth();
       });

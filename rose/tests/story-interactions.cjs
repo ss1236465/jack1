@@ -116,7 +116,10 @@ function fireLongPress() {
   assert.equal(app.A.music.playCalls,calls); assert.equal(app.A.userPaused,true);
   const pausedFrame=JSON.stringify(app.state.frame); advance(12); assert.equal(JSON.stringify(app.state.frame),pausedFrame);
   element('chapter-rain').click(); assert.equal(app.A.music.paused,true); assert.equal(app.state.frame.chapterId,'rain');
-  element('chapter-warmth').click(); assert.equal(app.state.frame.chapterId,'warmth'); seek(69);
+  element('chapter-warmth').click(); assert.equal(app.state.frame.chapterId,'warmth');
+  assert(Math.abs(Number(element('seek').value)-47.09/319.4*100)<1e-8);
+  element('seek').value=Number(element('seek').value)+.1; element('seek').dispatch('input'); app.tick();
+  assert.equal(app.state.frame.chapterId,'warmth'); seek(69);
   console.log('PASS pause stops story drift and chapter jumps preserve manual pause');
   const p=flowerPoint(); element('stage').dispatch('pointerdown',p); fireLongPress();
   assert.equal(element('letterDialog').open,true);
@@ -136,6 +139,8 @@ function fireLongPress() {
   assert(Math.abs(app.sharedUniforms.uHeartRight.value.dot(app.sharedUniforms.uHeartUp.value))<1e-8);
   console.log('PASS heart forms, faces camera and returns to rose');
   const renders=renderCalls; element('saveBtn').click(); assert(renderCalls>renders);
+  assert.equal(element('photoDialog').open,true); assert.equal(element('photoPreview').src,'blob:test');
+  assert(element('downloadPhotoLink').download.endsWith('.png')); element('closePhotoBtn').click();
   seek(319.4); app.A.music.pause(); app.A.music.dispatch('ended'); assert.equal(app.A.on,false); assert(element('body').classes.has('story-ended'));
   element('replayBtn').click(); assert.equal(app.state.growthT,0); assert.equal(app.state.open,0); assert.equal(app.state.stemGrow,0);
   assert.equal(app.A.music.currentTime,0); assert.equal(app.A.music.paused,true);
