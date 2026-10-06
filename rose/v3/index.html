@@ -1,0 +1,106 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+  <meta name="theme-color" content="#100d0a">
+  <meta name="description" content="翻开旧书，打开铁盒。跟随《半岛铁盒》，看一朵代码玫瑰走过温暖、雨幕与回忆。">
+  <link rel="icon" href="data:,">
+  <title>代码玫瑰 · 第三版 · 半岛铁盒</title>
+  <link rel="stylesheet" href="style.css?v=story-20261006">
+  <link rel="stylesheet" href="edition.css?v=story-20261006">
+</head>
+<body data-chapter="book">
+  <canvas id="stage" aria-label="歌曲中的回忆：可拖动旋转，点击玫瑰化成爱心，长按打开日记"></canvas>
+  <div class="story-vignette" aria-hidden="true"></div>
+  <div class="flash" id="flash"></div>
+  <header class="topbar">
+    <span class="brand"><span class="brand-symbol" aria-hidden="true">✧</span> CODE ROSE <span class="edition">第三版 / 03</span></span>
+    <a class="original-link" href="../v2/">第二版 <span aria-hidden="true">↗</span></a>
+  </header>
+  <section class="intro-screen" id="intro" aria-labelledby="introTitle">
+    <div class="intro-copy">
+      <p class="eyebrow"><span></span> A MEMORY, KEPT IN LIGHT</p>
+      <h1 id="introTitle">旧书里，<br><em>还有一束光。</em></h1>
+      <p class="intro-description">翻开书页，听见回忆。<br>让一朵玫瑰，陪你听完《半岛铁盒》。</p>
+    </div>
+    <div class="intro-action">
+      <button id="openBtn" class="open-button">翻开回忆 <span aria-hidden="true">↗</span></button>
+      <p>点击开启声音 · 建议戴上耳机</p>
+    </div>
+    <p class="intro-footnote">一页旧书 / 一只铁盒 / 一段被光留住的时光</p>
+  </section>
+  <div class="ui" inert>
+    <section class="chapter-copy" aria-label="当前篇章">
+      <p class="chapter-kicker"><span id="chapterCounter">01 / 06</span><span class="chapter-rule"></span> MEMORY ARCHIVE</p>
+      <h2 id="chapterTitle">书页里的光</h2>
+      <p id="chapterCaption" aria-live="polite">有些回忆，要慢慢翻开。</p>
+    </section>
+    <p class="tip" id="tip" hidden></p>
+    <p class="sub" id="sub" hidden></p>
+    <nav id="chapterNav" class="chapter-nav" aria-label="跳到歌曲篇章">
+      <button data-chapter="book" aria-label="跳到第一幕：旧书" aria-current="step"><span>01</span>书页</button>
+      <button data-chapter="box" aria-label="跳到第二幕：铁盒"><span>02</span>铁盒</button>
+      <button data-chapter="warmth" aria-label="跳到第三幕：温暖"><span>03</span>温暖</button>
+      <button data-chapter="rain" aria-label="跳到第四幕：雨幕"><span>04</span>雨幕</button>
+      <button data-chapter="memory" aria-label="跳到第五幕：日记"><span>05</span>日记</button>
+      <button data-chapter="ending" aria-label="跳到第六幕：收藏"><span>06</span>收藏</button>
+    </nav>
+    <div id="endingActions" class="ending-actions" aria-label="收藏这段回忆">
+      <p>把这一刻，轻轻收好。</p>
+      <div><button id="endingSaveBtn">保存这一刻 <span aria-hidden="true">↓</span></button><button id="endingReplayBtn">再听一次 <span aria-hidden="true">⟲</span></button></div>
+    </div>
+    <p class="hint" id="hint">拖动留下微光 · 点击玫瑰化成爱心 · 长按翻开日记</p>
+    <div class="btns" aria-label="玫瑰互动">
+      <button id="replayBtn" title="重新翻开回忆" aria-label="重新翻开回忆">⟲</button>
+      <button id="heartBtn" title="让玫瑰散成爱心" aria-label="让玫瑰散成爱心">♡</button>
+      <button id="letterBtn" title="翻开回忆日记" aria-label="翻开回忆日记">✉</button>
+      <button id="saveBtn" title="保存这一刻" aria-label="保存这一刻">↓</button>
+      <button id="soundBtn" title="播放《半岛铁盒》" aria-label="播放《半岛铁盒》" aria-pressed="false">▷</button>
+    </div>
+  </div>
+  <footer class="music-panel" aria-label="背景音乐" inert>
+    <div class="song-info"><div class="equalizer" id="equalizer" aria-hidden="true"><i></i><i></i><i></i><i></i><i></i></div><div><strong>半岛铁盒</strong><span>周杰伦 · 八度空间</span></div><span class="audio-label" id="audioLabel" role="status">点击播放</span></div>
+    <div class="song-progress"><span id="currentTime">0:00</span><input id="seek" type="range" min="0" max="100" step="0.1" value="0" aria-label="音乐播放进度"><span id="duration">5:19</span></div>
+  </footer>
+  <dialog id="letterDialog" aria-labelledby="letterTitle">
+    <div class="letter-top"><span>THE PAGES WE KEEP</span><button id="closeLetterBtn" aria-label="合上日记">×</button></div>
+    <div class="diary-binding" aria-hidden="true"></div>
+    <p class="letter-mark" aria-hidden="true">✧</p><h2 id="letterTitle">回忆，留一页空白。</h2>
+    <div id="diaryPages" class="diary-pages">
+      <section class="diary-page" data-diary-page="0" aria-label="日记第一页">
+        <p class="diary-date">第一页 · 光还很暖</p>
+        <p class="diary-prose">纸页停在某个午后。<br>窗边的光慢慢移动，<br>桌上有一朵还没开完的花。</p>
+        <p class="diary-prose">那时觉得，日子很长，<br>有很多话，可以留到明天。</p>
+        <p class="diary-note">把温暖，留在这一页。</p>
+      </section>
+      <section class="diary-page" data-diary-page="1" aria-label="日记第二页" hidden>
+        <p class="diary-date">第二页 · 后来下起了雨</p>
+        <p class="diary-prose">雨把窗外变得模糊，<br>那些没有说完的话，<br>也渐渐安静下来。</p>
+        <p class="diary-prose">我把一束微光收进盒子，<br>让经过的时光，有处可去。</p>
+        <p class="diary-note">有些想念，轻轻放下就好。</p>
+      </section>
+      <section class="diary-page diary-write-page" data-diary-page="2" aria-label="你的日记页" hidden>
+        <p class="diary-date" id="diaryEntryDate">第三页 · 写给此刻</p>
+        <label for="letterText">这一页，留给你。</label>
+        <textarea id="letterText" maxlength="500" rows="6" placeholder="写下一句想留住的话。下一次打开，它还在这里。"></textarea>
+      </section>
+    </div>
+    <div class="diary-navigation"><button id="diaryPrevBtn" aria-label="翻到上一页">← 上一页</button><span id="diaryPageLabel" role="status" aria-live="polite">01 / 03</span><button id="diaryNextBtn" aria-label="翻到下一页">下一页 →</button></div>
+    <div class="letter-footer"><small>你写下的内容只保存在这个浏览器里。</small><button id="saveLetterBtn" hidden>收好这一页 <span aria-hidden="true">♡</span></button></div>
+  </dialog>
+  <div class="toast" id="toast" role="status" aria-live="polite"></div>
+  <script src="../vendor/three.min.js"></script>
+  <script src="../vendor/CopyShader.js"></script>
+  <script src="../vendor/LuminosityHighPassShader.js"></script>
+  <script src="../vendor/Pass.js"></script>
+  <script src="../vendor/RenderPass.js"></script>
+  <script src="../vendor/ShaderPass.js"></script>
+  <script src="../vendor/UnrealBloomPass.js"></script>
+  <script src="../vendor/EffectComposer.js"></script>
+  <script src="story-timeline.js?v=story-20261006"></script>
+  <script src="story-scene.js?v=story-20261006"></script>
+  <script src="diary.js?v=story-20261006"></script>
+  <script src="app.js?v=story-20261006"></script>
+</body>
+</html>

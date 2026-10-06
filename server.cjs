@@ -15,13 +15,13 @@ const files = {
 
 http.createServer((request, response) => {
   const route = new URL(request.url, 'http://localhost').pathname;
-  if (route === '/rose' || route === '/rose/v2') {
+  if (route === '/rose' || route === '/rose/v2' || route === '/rose/v3') {
     response.writeHead(302, { Location: `${route}/` });
     response.end();
     return;
   }
   let file = files[route];
-  if (route === '/rose/' || route === '/rose/v2/') {
+  if (route === '/rose/' || route === '/rose/v2/' || route === '/rose/v3/') {
     file = [route.slice(1) + 'index.html', 'text/html; charset=utf-8'];
   } else if (/^\/rose\/[a-zA-Z0-9_./-]+$/.test(route) && !route.split('/').includes('..')) {
     const mime = { '.html': 'text/html; charset=utf-8', '.css': 'text/css; charset=utf-8', '.js': 'text/javascript; charset=utf-8', '.mp3': 'audio/mpeg' }[path.extname(route)];
