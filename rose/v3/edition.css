@@ -22,7 +22,7 @@ body[data-chapter=rain],body[data-chapter=memory]{--cyan:#b2c5cc;--pink:#a2b2bf;
 .intro-footnote{position:absolute;bottom:26px;left:20px;right:20px;text-align:center;font-size:8px;letter-spacing:.16em;color:#746a5b}
 .ui{opacity:0;transition:opacity 1.3s}.opened .ui{opacity:1}
 .chapter-copy{position:fixed;left:35px;top:103px;max-width:310px;text-align:left;pointer-events:none}
-.chapter-kicker{display:flex;align-items:center;gap:10px;font-size:8px;color:var(--muted);letter-spacing:.18em}.chapter-rule{width:27px;height:1px;background:var(--line)}
+.chapter-kicker{display:flex;align-items:center;gap:10px;font-size:8px;color:var(--muted);letter-spacing:.18em}.chapter-rule{width:27px;height:1px;background:var(--line)}.dedication{margin-left:3px;color:rgba(222,190,148,.72);font-size:8px;letter-spacing:.12em;white-space:nowrap;opacity:0;transform:translateY(4px);transition:opacity 1s ease .5s,transform 1s ease .5s}.opened .dedication{opacity:1;transform:translateY(0)}
 .chapter-copy h2{font-family:'Songti SC','SimSun',serif;font-size:25px;font-weight:300;letter-spacing:.13em;color:var(--cyan);margin-top:17px}
 #chapterCaption{margin-top:13px;color:#a8a398;font-size:10px;letter-spacing:.07em;line-height:1.8}
 .chapter-nav{position:fixed;z-index:8;right:27px;top:50%;transform:translateY(-50%);display:flex;flex-direction:column;gap:11px;pointer-events:none}
