@@ -1,0 +1,65 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+  <meta name="theme-color" content="#03080d">
+  <meta name="description" content="打开铁盒，听一首歌，让一朵玫瑰随音乐生长。代码玫瑰第二版。">
+  <link rel="icon" href="data:,">
+  <title>代码玫瑰 · 第二版 · 半岛铁盒</title>
+  <link rel="stylesheet" href="style.css">
+  <link rel="stylesheet" href="edition.css">
+</head>
+<body>
+  <canvas id="stage" aria-label="可拖动旋转、点击变成爱心的发光玫瑰"></canvas>
+  <div class="flash" id="flash"></div>
+  <header class="topbar">
+    <span class="brand"><span class="brand-symbol">✧</span> CODE ROSE <span class="edition">第二版 / 02</span></span>
+    <a class="original-link" href="../">原版 <span aria-hidden="true">↗</span></a>
+  </header>
+  <section class="intro-screen" id="intro" aria-labelledby="introTitle">
+    <div class="intro-copy">
+      <p class="eyebrow"><span></span> A SONG. A BOX. A MOMENT.</p>
+      <h1 id="introTitle">把这一刻，<br><em>藏进铁盒里。</em></h1>
+      <p class="intro-description">一首《半岛铁盒》，一朵慢慢生长的玫瑰。</p>
+    </div>
+    <div class="intro-action">
+      <button id="openBtn" class="open-button">打开铁盒 <span aria-hidden="true">↗</span></button>
+      <p>点击开启 · 建议戴上耳机</p>
+    </div>
+  </section>
+  <div class="ui" inert>
+    <p class="tip" id="tip">一段代码 · 正在长成一朵玫瑰</p>
+    <p class="sub" id="sub">让心事，慢慢开成一朵花。</p>
+    <p class="hint" id="hint">拖动旋转与星光 · 点击花朵变成爱心 · 长按藏一封信</p>
+    <div class="btns" aria-label="玫瑰互动">
+      <button id="replayBtn" title="重看铁盒开场" aria-label="重看铁盒开场">⟲</button>
+      <button id="heartBtn" title="让玫瑰散成爱心" aria-label="让玫瑰散成爱心">♡</button>
+      <button id="letterBtn" title="藏一封小情书" aria-label="藏一封小情书">✉</button>
+      <button id="saveBtn" title="保存这一刻" aria-label="保存这一刻">↓</button>
+      <button id="soundBtn" title="播放《半岛铁盒》" aria-label="播放《半岛铁盒》" aria-pressed="false">▷</button>
+    </div>
+  </div>
+  <footer class="music-panel" aria-label="背景音乐" inert>
+    <div class="song-info"><div class="equalizer" id="equalizer" aria-hidden="true"><i></i><i></i><i></i><i></i><i></i></div><div><strong>半岛铁盒</strong><span>周杰伦 · 八度空间</span></div><span class="audio-label" id="audioLabel" role="status">点击播放</span></div>
+    <div class="song-progress"><span id="currentTime">0:00</span><input id="seek" type="range" min="0" max="100" step="0.1" value="0" aria-label="音乐播放进度"><span id="duration">5:19</span></div>
+  </footer>
+  <dialog id="letterDialog" aria-labelledby="letterTitle">
+    <div class="letter-top"><span>KEEP A LITTLE MOMENT</span><button id="closeLetterBtn" aria-label="关闭情书">×</button></div>
+    <p class="letter-mark" aria-hidden="true">✧</p><h2 id="letterTitle">有些话，慢慢说。</h2>
+    <label for="letterText">写给此刻的一句话</label>
+    <textarea id="letterText" maxlength="500" rows="5" placeholder="把没说完的话，藏在这朵玫瑰里。"></textarea>
+    <div class="letter-footer"><small>只保存在这个浏览器里。</small><button id="saveLetterBtn">藏好这封信 <span aria-hidden="true">♡</span></button></div>
+  </dialog>
+  <div class="toast" id="toast" role="status" aria-live="polite"></div>
+  <script src="../vendor/three.min.js"></script>
+  <script src="../vendor/CopyShader.js"></script>
+  <script src="../vendor/LuminosityHighPassShader.js"></script>
+  <script src="../vendor/Pass.js"></script>
+  <script src="../vendor/RenderPass.js"></script>
+  <script src="../vendor/ShaderPass.js"></script>
+  <script src="../vendor/UnrealBloomPass.js"></script>
+  <script src="../vendor/EffectComposer.js"></script>
+  <script src="app.js"></script>
+</body>
+</html>

@@ -15,7 +15,18 @@ const files = {
 
 http.createServer((request, response) => {
   const route = new URL(request.url, 'http://localhost').pathname;
+  if (route === '/rose' || route === '/rose/v2') {
+    response.writeHead(302, { Location: `${route}/` });
+    response.end();
+    return;
+  }
   let file = files[route];
+  if (route === '/rose/' || route === '/rose/v2/') {
+    file = [route.slice(1) + 'index.html', 'text/html; charset=utf-8'];
+  } else if (/^\/rose\/[a-zA-Z0-9_./-]+$/.test(route) && !route.split('/').includes('..')) {
+    const mime = { '.html': 'text/html; charset=utf-8', '.css': 'text/css; charset=utf-8', '.js': 'text/javascript; charset=utf-8', '.mp3': 'audio/mpeg' }[path.extname(route)];
+    if (mime) file = [route.slice(1), mime];
+  }
   if (/^\/vendor\/hands\/[a-zA-Z0-9_.-]+$/.test(route)) {
     const mime = {'.js': 'text/javascript; charset=utf-8', '.wasm': 'application/wasm', '.gz': 'application/gzip', '.data': 'application/octet-stream', '.tflite': 'application/octet-stream', '.binarypb': 'application/octet-stream'}[path.extname(route)];
     if (mime) file = [route.slice(1), mime];
@@ -26,6 +37,27 @@ http.createServer((request, response) => {
     return;
   }
   response.setHeader('Content-Type', file[1]);
+  if (file[1] === 'audio/mpeg') {
+    const audioPath = path.join(__dirname, file[0]);
+    let size;
+    try { size = fs.statSync(audioPath).size; }
+    catch { response.writeHead(404); response.end('Not found'); return; }
+    response.setHeader('Accept-Ranges', 'bytes');
+    if (request.headers.range) {
+      const range = /^bytes=(\d+)-(\d*)$/.exec(request.headers.range);
+      const start = range ? Number(range[1]) : NaN;
+      const end = range && range[2] ? Math.min(Number(range[2]), size - 1) : size - 1;
+      if (!Number.isSafeInteger(start) || !Number.isSafeInteger(end) || start > end || start >= size) {
+        response.writeHead(416, { 'Content-Range': `bytes */${size}` });
+        response.end();
+        return;
+      }
+      response.writeHead(206, { 'Content-Range': `bytes ${start}-${end}/${size}`, 'Content-Length': end - start + 1 });
+      fs.createReadStream(audioPath, { start, end }).pipe(response);
+      return;
+    }
+    response.setHeader('Content-Length', size);
+  }
   const stream = fs.createReadStream(path.join(__dirname, file[0]));
   stream.on('error', () => {
     if (!response.headersSent) response.writeHead(500);
